@@ -1,34 +1,32 @@
 "use client"
-import React, { useState } from 'react';
-import ChatWindow from './components/ChatWindow';
-import LiveWordDisplay from './components/LiveWordDisplay';
-import MicrophoneToggle from './components/MicrophoneToggle';
-import { sendMessageToOpenAI } from './api/openai';
-import { sendTextToElevenLabs } from './api/elevenlabs';
+import { useState } from 'react';
+import { sendMessage } from './api/openai/openai';
 
-const Home: React.FC = () => {
-  const [messages, setMessages] = useState<string[]>([]);
-  const [liveWords, setLiveWords] = useState<string>('');
-  const [isListening, setIsListening] = useState<boolean>(false);
+export default function ChatPage() {
+  const [inputMessage, setInputMessage] = useState('');
+  const [chatLog, setChatLog] = useState<string[]>([]);
 
-  const handleSendMessage = async (message: string) => {
+  const sendMessageToAI = async () => {
+    if (!inputMessage.trim()) return;
+
     try {
-      const openaiResponse = await sendMessageToOpenAI(message);
-      const elevenlabsResponse = await sendTextToElevenLabs(openaiResponse);
-      setMessages([...messages, message, openaiResponse, elevenlabsResponse]);
+      const response = await sendMessage(inputMessage);
+      setChatLog(prevChatLog => [...prevChatLog, inputMessage, response]);
+      setInputMessage('');
     } catch (error) {
-      console.error('Error handling message:', error);
+      console.error('Failed to send message:', error.message);
     }
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">Chat Application</h1>
-      <ChatWindow messages={messages} />
-      <LiveWordDisplay liveWords={liveWords} />
-      <MicrophoneToggle />
+    <div>
+      <div>
+        {chatLog.map((message, index) => (
+          <div key={index}>{message}</div>
+        ))}
+      </div>
+      <input type="text" value={inputMessage} onChange={(e) => setInputMessage(e.target.value)} />
+      <button onClick={sendMessageToAI}>Send</button>
     </div>
   );
-};
-
-export default Home;
+}
