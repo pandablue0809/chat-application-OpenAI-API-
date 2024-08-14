@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-const OPENAI_API_KEY = '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';
 
 export async function sendMessage(message: string): Promise<string> {
     try {
